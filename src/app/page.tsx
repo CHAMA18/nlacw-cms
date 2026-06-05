@@ -10,13 +10,31 @@ import { Documents } from '@/components/cms/documents';
 import { Tasks } from '@/components/cms/tasks';
 import { Reports } from '@/components/cms/reports';
 import { Settings } from '@/components/cms/settings';
-import { Menu, Bell, HelpCircle } from 'lucide-react';
+import { Menu, Bell, HelpCircle, LogOut, User, Settings2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useRouter } from 'next/navigation';
+import { staff } from '@/lib/mock-data';
+
+const currentUser = staff[0];
 
 export default function Home() {
   const [activeNav, setActiveNav] = useState<NavItem>('dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const router = useRouter();
+
+  const handleLogout = () => {
+    router.push('/auth/login');
+  };
 
   const renderContent = () => {
     switch (activeNav) {
@@ -106,9 +124,47 @@ export default function Home() {
                 <HelpCircle className="w-5 h-5" />
               </button>
             </div>
-            <div className="w-8 h-8 rounded-full bg-[#0d7c71] overflow-hidden border border-[#bdc9c6] shadow-sm flex items-center justify-center">
-              <span className="text-[12px] font-semibold text-[#bffff4]">M</span>
-            </div>
+
+            {/* User Avatar Dropdown Menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2.5 hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-offset-2 rounded-full">
+                  <div className="w-8 h-8 rounded-full bg-[#0d7c71] overflow-hidden border border-[#bdc9c6] shadow-sm flex items-center justify-center">
+                    <span className="text-[12px] font-semibold text-[#bffff4]">M</span>
+                  </div>
+                  <span className="hidden md:block text-[14px] font-medium text-[#0b1c30]">
+                    {currentUser.name}
+                  </span>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-[14px] font-medium text-[#0b1c30]">{currentUser.name}</p>
+                    <p className="text-[12px] text-[#3e4947]">{currentUser.email}</p>
+                    <p className="text-[11px] text-[#7bd6c9] font-semibold">{currentUser.role}</p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem
+                    className="cursor-pointer text-[#0b1c30] focus:text-[#0b1c30]"
+                    onClick={() => setActiveNav('settings')}
+                  >
+                    <Settings2 className="mr-2 h-4 w-4 text-[#3e4947]" />
+                    Settings
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="cursor-pointer text-[#ba1a1a] focus:text-[#ba1a1a] focus:bg-[#ffdad6]/50"
+                  onClick={handleLogout}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </header>
 

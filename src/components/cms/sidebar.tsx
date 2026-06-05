@@ -133,7 +133,7 @@ export function Sidebar({ activeItem, onNavigate, collapsed, onToggleCollapse }:
                 <p className="text-[14px] font-medium text-white truncate">{currentUser.name}</p>
                 <p className="text-[11px] text-[#7bd6c9] font-medium">{currentUser.role}</p>
               </div>
-              <button className="text-[#bdc7da]/50 hover:text-white transition-colors p-1" onClick={handleLogout}>
+              <button className="text-[#bdc7da]/50 hover:text-white transition-colors p-1" onClick={handleLogout} title="Sign Out">
                 <LogOut className="w-4 h-4" />
               </button>
             </div>

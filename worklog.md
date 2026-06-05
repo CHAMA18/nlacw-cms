@@ -90,3 +90,24 @@ Stage Summary:
 - All NLACW custom theme tokens integrated into Tailwind v4
 - Password toggle and strength meter fully functional
 - LogOut button in sidebar now navigates to login page
+
+---
+Task ID: 5
+Agent: Main Agent
+Task: Add logout option to dashboard for user to sign out of the application
+
+Work Log:
+- Added user avatar dropdown menu to the top navigation bar in page.tsx
+- Dropdown shows: user name, email, role, Settings link, and prominent "Sign Out" option
+- Sign Out item styled in red (#ba1a1a) to indicate destructive action
+- Added router navigation so Sign Out redirects to /auth/login
+- Added user name display next to avatar in top nav bar (visible on desktop)
+- Added title="Sign Out" tooltip to sidebar logout icon button
+- Settings menu item navigates to Settings module within the app
+- Build succeeds, verified "Sign Out" and dropdown elements present in HTML output
+
+Stage Summary:
+- Top nav bar: User avatar dropdown with name, email, role, Settings, and Sign Out
+- Sidebar: LogOut icon button with tooltip
+- Both logout options navigate to /auth/login page
+- User can authenticate out of the application from the dashboard
