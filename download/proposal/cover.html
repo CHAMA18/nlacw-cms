@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NLACW Case Management System Proposal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  @page {
+    size: 794px 1123px;
+    margin: 0;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 794px;
+    height: 1123px;
+    background: #f4f3f4;
+    font-family: 'Inter', sans-serif;
+  }
+
+  @media screen {
+    html {
+      height: auto;
+      display: flex;
+      justify-content: center;
+    }
+    body {
+      transform-origin: top center;
+      scale: min(1, calc(100vh / 1123));
+      margin: 0 auto;
+    }
+  }
+
+  /* Layer 0 - Background */
+  .cover-page {
+    position: relative;
+    width: 794px;
+    height: 1123px;
+    background: #f4f3f4;
+  }
+
+  /* Layer 1 - Background decoration (clipped) */
+  .cover-bg-layer {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    z-index: 1;
+  }
+
+  /* Left sidebar pillar */
+  .sidebar-pillar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 79px; /* 0.1 * 794 */
+    height: 1123px;
+    background: #5b4965;
+  }
+
+  /* Sidebar watermark */
+  .sidebar-watermark {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%) rotate(-90deg);
+    font-family: 'Inter', sans-serif;
+    font-size: 42px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.15);
+    letter-spacing: 12px;
+    white-space: nowrap;
+    text-transform: uppercase;
+  }
+
+  /* Layer 2 - Structure lines (no overflow hidden) */
+  .cover-structure-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+  }
+
+  /* Bottom horizontal line */
+  .bottom-line {
+    position: absolute;
+    bottom: 101px; /* 0.9 * 1123 - 10 */
+    left: 119px; /* sidebar + 40pt */
+    width: 637px; /* 0.9 * 794 - sidebar */
+    height: 1px;
+    background: rgba(91, 73, 101, 0.3);
+  }
+
+  /* Layer 3 - Content (no overflow hidden) */
+  .cover-content-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-left: 119px; /* sidebar(79) + 40pt */
+    padding-right: 79px; /* right margin ~10% */
+  }
+
+  .kicker {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: rgba(38, 35, 39, 0.6);
+    margin-bottom: 24px;
+  }
+
+  .hero-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 48px;
+    font-weight: 900;
+    color: #262327;
+    line-height: 1.15;
+    margin-bottom: 32px;
+    max-width: 580px;
+  }
+
+  .summary-block {
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    color: rgba(38, 35, 39, 0.85);
+    line-height: 1.6;
+    max-width: 500px;
+    margin-bottom: 48px;
+  }
+
+  .meta-block {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .meta-line {
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    color: #262327;
+    line-height: 1.8;
+  }
+
+  .meta-label {
+    font-weight: 600;
+    color: #5b4965;
+  }
+
+  .footer-block {
+    position: absolute;
+    bottom: 60px;
+    left: 119px;
+    right: 79px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color: rgba(38, 35, 39, 0.6);
+    letter-spacing: 1px;
+  }
+
+  .accent-bar {
+    width: 50px;
+    height: 5px;
+    background: #288a38;
+    margin-bottom: 20px;
+  }
+</style>
+</head>
+<body>
+<div class="cover-page">
+  <!-- Layer 1: Background -->
+  <div class="cover-bg-layer">
+    <div class="sidebar-pillar"></div>
+    <div class="sidebar-watermark">NLACW</div>
+  </div>
+
+  <!-- Layer 2: Structure -->
+  <div class="cover-structure-layer">
+    <div class="bottom-line"></div>
+  </div>
+
+  <!-- Layer 3: Content -->
+  <div class="cover-content-layer">
+    <div class="accent-bar"></div>
+    <div class="kicker">EXPRESSION OF INTEREST</div>
+    <div class="hero-title">Development of a Web-Based<br>Case Management System</div>
+    <div class="summary-block">
+      A comprehensive proposal for the design, development, and deployment of a modern digital case management platform for the National Legal Aid Clinic for Women, replacing paper-based forms and streamlining legal aid delivery across Zambia.
+    </div>
+    <div class="meta-block">
+      <div class="meta-line"><span class="meta-label">Prepared for:</span> National Legal Aid Clinic for Women (NLACW)</div>
+      <div class="meta-line"><span class="meta-label">Submitted by:</span> LexTech Solutions Zambia Ltd.</div>
+      <div class="meta-line"><span class="meta-label">Date:</span> 5 June 2026</div>
+      <div class="meta-line"><span class="meta-label">Reference:</span> NLACW/CMS/EOI/2026</div>
+    </div>
+  </div>
+
+  <div class="footer-block">
+    <span>CONFIDENTIAL</span>
+    <span>JUNE 2026</span>
+  </div>
+</div>
+</body>
+</html>
