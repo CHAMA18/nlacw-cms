@@ -13,10 +13,10 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
+  Menu,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Separator } from '@/components/ui/separator';
 import {
   Tooltip,
   TooltipContent,
@@ -36,11 +36,9 @@ interface SidebarProps {
 
 const navItems: { id: NavItem; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'clients', label: 'Clients', icon: Users },
   { id: 'cases', label: 'Cases', icon: Briefcase },
-  { id: 'calendar', label: 'Calendar', icon: Calendar },
+  { id: 'clients', label: 'Clients', icon: Users },
   { id: 'documents', label: 'Documents', icon: FileText },
-  { id: 'tasks', label: 'Tasks', icon: CheckSquare },
   { id: 'reports', label: 'Reports', icon: BarChart3 },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
@@ -51,116 +49,114 @@ export function Sidebar({ activeItem, onNavigate, collapsed, onToggleCollapse }:
   return (
     <TooltipProvider delayDuration={0}>
       <div
-        className={`flex flex-col h-screen bg-slate-900 text-white transition-all duration-300 ${
-          collapsed ? 'w-[68px]' : 'w-[260px]'
+        className={`hidden md:flex flex-col h-screen bg-[#121c2a] text-[#98f3e5] transition-all duration-300 ${
+          collapsed ? 'w-[68px]' : 'w-[280px]'
         }`}
       >
         {/* Header / Branding */}
-        <div className="flex items-center gap-3 px-4 py-5 border-b border-slate-700/50">
-          <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-teal-500 flex items-center justify-center">
-            <Scale className="w-5 h-5 text-white" />
-          </div>
-          {!collapsed && (
-            <div className="overflow-hidden">
-              <h1 className="text-base font-bold tracking-tight text-white">NLACW</h1>
-              <p className="text-[11px] text-slate-400 leading-tight">Case Management System</p>
+        <div className="px-6 mb-8 pt-8">
+          {!collapsed ? (
+            <>
+              <h1 className="text-[20px] font-semibold text-[#98f3e5] leading-7">NLACW CMS</h1>
+              <p className="text-[12px] text-[#bdc7da]/70 mt-1 font-semibold tracking-[0.05em]">Legal Management</p>
+            </>
+          ) : (
+            <div className="flex justify-center">
+              <div className="w-9 h-9 rounded-lg bg-[#0d7c71] flex items-center justify-center">
+                <Scale className="w-5 h-5 text-[#bffff4]" />
+              </div>
             </div>
           )}
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 py-4 px-2 overflow-y-auto">
-          <ul className="space-y-1">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = activeItem === item.id;
-              return (
-                <li key={item.id}>
-                  {collapsed ? (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button
-                          onClick={() => onNavigate(item.id)}
-                          className={`w-full flex items-center justify-center p-3 rounded-lg transition-all duration-200 ${
-                            isActive
-                              ? 'bg-teal-600 text-white shadow-lg shadow-teal-600/25'
-                              : 'text-slate-400 hover:text-white hover:bg-slate-800'
-                          }`}
-                        >
-                          <Icon className="w-5 h-5" />
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent side="right" className="font-medium">
-                        {item.label}
-                      </TooltipContent>
-                    </Tooltip>
-                  ) : (
-                    <button
-                      onClick={() => onNavigate(item.id)}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 text-sm ${
-                        isActive
-                          ? 'bg-teal-600 text-white shadow-lg shadow-teal-600/25 font-medium'
-                          : 'text-slate-400 hover:text-white hover:bg-slate-800 font-normal'
-                      }`}
-                    >
-                      <Icon className="w-5 h-5 flex-shrink-0" />
-                      <span>{item.label}</span>
-                    </button>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
+        <nav className="flex-1 flex flex-col gap-2 px-0">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeItem === item.id;
+            return (
+              <div key={item.id}>
+                {collapsed ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => onNavigate(item.id)}
+                        className={`w-full flex items-center justify-center p-3 transition-all duration-200 ${
+                          isActive
+                            ? 'bg-white/10 text-[#98f3e5] border-l-4 border-[#0d7c71]'
+                            : 'text-[#bdc7da]/70 hover:bg-white/5 hover:text-[#98f3e5]'
+                        }`}
+                      >
+                        <Icon className="w-5 h-5" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="font-medium">
+                      {item.label}
+                    </TooltipContent>
+                  </Tooltip>
+                ) : (
+                  <button
+                    onClick={() => onNavigate(item.id)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 transition-all duration-200 ${
+                      isActive
+                        ? 'bg-white/10 text-[#98f3e5] border-l-4 border-[#0d7c71] cursor-pointer'
+                        : 'text-[#bdc7da]/70 hover:bg-white/5 hover:text-[#98f3e5] cursor-pointer'
+                    }`}
+                  >
+                    <Icon className="w-5 h-5" />
+                    <span className="text-[16px] font-normal leading-6">{item.label}</span>
+                  </button>
+                )}
+              </div>
+            );
+          })}
+
+          {/* Settings pushed to bottom when not collapsed */}
+          {!collapsed && <div className="flex-1" />}
         </nav>
 
-        <Separator className="bg-slate-700/50" />
-
         {/* User Profile */}
-        <div className="p-3">
-          {!collapsed ? (
-            <div className="flex items-center gap-3 p-2 rounded-lg bg-slate-800/50">
-              <Avatar className="w-9 h-9 border-2 border-teal-500">
-                <AvatarFallback className="bg-teal-600 text-white text-xs font-semibold">
-                  {currentUser.avatar}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">{currentUser.name}</p>
-                <p className="text-[11px] text-teal-400 font-medium">{currentUser.role}</p>
+        {!collapsed ? (
+          <div className="p-4">
+            <div className="flex items-center gap-3 p-2 rounded-lg bg-white/5">
+              <div className="w-8 h-8 rounded-full bg-[#0d7c71] overflow-hidden border border-[#bdc9c6] shadow-sm flex items-center justify-center">
+                <span className="text-[12px] font-semibold text-[#bffff4]">M</span>
               </div>
-              <button className="text-slate-500 hover:text-white transition-colors p-1">
+              <div className="flex-1 min-w-0">
+                <p className="text-[14px] font-medium text-white truncate">{currentUser.name}</p>
+                <p className="text-[11px] text-[#7bd6c9] font-medium">{currentUser.role}</p>
+              </div>
+              <button className="text-[#bdc7da]/50 hover:text-white transition-colors p-1">
                 <LogOut className="w-4 h-4" />
               </button>
             </div>
-          ) : (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button className="w-full flex justify-center p-2">
-                  <Avatar className="w-8 h-8 border-2 border-teal-500">
-                    <AvatarFallback className="bg-teal-600 text-white text-xs font-semibold">
-                      {currentUser.avatar}
-                    </AvatarFallback>
-                  </Avatar>
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="right">
-                <p className="font-medium">{currentUser.name}</p>
-                <p className="text-xs text-muted-foreground">{currentUser.role}</p>
-              </TooltipContent>
-            </Tooltip>
-          )}
-        </div>
+          </div>
+        ) : (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button className="w-full flex justify-center p-2 mb-2">
+                <div className="w-8 h-8 rounded-full bg-[#0d7c71] overflow-hidden border border-[#6e7977] shadow-sm flex items-center justify-center">
+                  <span className="text-[12px] font-semibold text-[#bffff4]">M</span>
+                </div>
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right">
+              <p className="font-medium">{currentUser.name}</p>
+              <p className="text-xs text-muted-foreground">{currentUser.role}</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
 
         {/* Collapse Toggle */}
-        <div className="p-2 border-t border-slate-700/50">
+        <div className="p-2 border-t border-white/10">
           <Button
             variant="ghost"
             size="sm"
             onClick={onToggleCollapse}
-            className="w-full text-slate-400 hover:text-white hover:bg-slate-800 justify-center"
+            className="w-full text-[#bdc7da]/50 hover:text-white hover:bg-white/5 justify-center"
           >
             {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-            {!collapsed && <span className="ml-2 text-xs">Collapse</span>}
+            {!collapsed && <span className="ml-2 text-[12px]">Collapse</span>}
           </Button>
         </div>
       </div>

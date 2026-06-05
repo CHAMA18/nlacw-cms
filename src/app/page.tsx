@@ -10,7 +10,7 @@ import { Documents } from '@/components/cms/documents';
 import { Tasks } from '@/components/cms/tasks';
 import { Reports } from '@/components/cms/reports';
 import { Settings } from '@/components/cms/settings';
-import { Menu } from 'lucide-react';
+import { Menu, Bell, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function Home() {
@@ -42,7 +42,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
+    <div className="flex h-screen bg-[#F8F9FF] overflow-hidden">
       {/* Desktop Sidebar */}
       <div className="hidden md:flex">
         <Sidebar
@@ -77,42 +77,43 @@ export default function Home() {
         </div>
       )}
 
-      {/* Main Content */}
+      {/* Main Content Wrapper */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Top Bar */}
-        <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 flex-shrink-0">
+        {/* TopNavBar */}
+        <header className="bg-[#F8F9FF] border-b border-[#bdc9c6] h-16 flex justify-between items-center px-4 md:px-10 w-full sticky top-0 z-10 flex-shrink-0">
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
               size="icon"
-              className="md:hidden h-8 w-8"
+              className="md:hidden h-8 w-8 text-[#3e4947]"
               onClick={() => setMobileMenuOpen(true)}
             >
-              <Menu className="w-5 h-5 text-slate-600" />
+              <Menu className="w-5 h-5" />
             </Button>
-            <div className="flex items-center gap-2">
-              <h1 className="text-sm font-semibold text-slate-900 capitalize">
-                {activeNav === 'gbv' ? 'GBV' : activeNav}
-              </h1>
-              <span className="text-xs text-slate-400 hidden sm:inline">
-                — National Legal Aid Clinic for Women
-              </span>
+            <div className="font-semibold text-[20px] text-[#0b1c30] leading-7 hidden lg:block">
+              National Legal Aid Clinic for Women
+            </div>
+            <div className="font-semibold text-[20px] text-[#0b1c30] leading-7 lg:hidden">
+              NLACW
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] text-slate-400 hidden sm:inline">
-              {new Date().toLocaleDateString('en-GB', {
-                weekday: 'short',
-                day: 'numeric',
-                month: 'short',
-                year: 'numeric',
-              })}
-            </span>
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <button className="p-2 text-[#3e4947] hover:text-[#006158] transition-colors active:scale-90">
+                <Bell className="w-5 h-5" />
+              </button>
+              <button className="p-2 text-[#3e4947] hover:text-[#006158] transition-colors active:scale-90">
+                <HelpCircle className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="w-8 h-8 rounded-full bg-[#0d7c71] overflow-hidden border border-[#bdc9c6] shadow-sm flex items-center justify-center">
+              <span className="text-[12px] font-semibold text-[#bffff4]">M</span>
+            </div>
           </div>
         </header>
 
-        {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6">
+        {/* Dashboard Content */}
+        <main className="flex-1 overflow-y-auto p-4 md:p-10 w-full max-w-[1440px] mx-auto">
           {renderContent()}
         </main>
       </div>
