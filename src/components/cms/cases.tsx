@@ -2,45 +2,6 @@
 
 import { useState } from 'react';
 import {
-  Search,
-  Plus,
-  Eye,
-  Calendar,
-  User,
-  FileText,
-  CheckSquare,
-  ArrowRight,
-  Gavel,
-} from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { Progress } from '@/components/ui/progress';
-import {
   cases,
   staff,
   getStatusColor,
@@ -50,12 +11,44 @@ import {
   type CaseStatus,
 } from '@/lib/mock-data';
 
-const workflowSteps = [
-  { label: 'Intake', statuses: ['Pending Review'] },
-  { label: 'Active', statuses: ['Active'] },
-  { label: 'Court', statuses: ['Awaiting Court'] },
-  { label: 'Resolved', statuses: ['Closed-Resolved', 'Closed-Unresolved'] },
-];
+const caseTypes: CaseType[] = ['GBV', 'Property Dispute', 'Child Custody', 'Maintenance', 'Domestic Violence', 'Land Dispute', 'Inheritance'];
+const statuses: CaseStatus[] = ['Active', 'Pending Review', 'Awaiting Court', 'Closed-Resolved', 'Closed-Unresolved'];
+const offices: Office[] = ['Lusaka', 'Ndola', 'Livingstone'];
+const lawyers = staff.filter((s) => s.role === 'Lawyer');
+
+// Status badge color mapping matching the HTML design
+function getStatusBadge(status: string) {
+  switch (status) {
+    case 'Active':
+      return 'bg-green-100 text-green-800 border-green-200';
+    case 'Awaiting Court':
+      return 'bg-blue-100 text-blue-800 border-blue-200';
+    case 'Pending Review':
+      return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+    case 'Closed-Resolved':
+      return 'bg-green-100 text-green-800 border-green-200';
+    case 'Closed-Unresolved':
+      return 'bg-gray-100 text-gray-800 border-gray-200';
+    default:
+      return 'bg-gray-100 text-gray-800 border-gray-200';
+  }
+}
+
+// Priority badge color mapping matching the HTML design
+function getPriorityBadge(priority: string) {
+  switch (priority) {
+    case 'Urgent':
+      return 'bg-red-100 text-red-800 border-red-200';
+    case 'High':
+      return 'bg-orange-100 text-orange-800 border-orange-200';
+    case 'Medium':
+      return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+    case 'Low':
+      return 'bg-gray-100 text-gray-800 border-gray-200';
+    default:
+      return 'bg-gray-100 text-gray-800 border-gray-200';
+  }
+}
 
 export function Cases() {
   const [search, setSearch] = useState('');
@@ -63,8 +56,8 @@ export function Cases() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [officeFilter, setOfficeFilter] = useState<string>('all');
   const [lawyerFilter, setLawyerFilter] = useState<string>('all');
-  const [selectedCase, setSelectedCase] = useState<string | null>(null);
-  const [showIntakeDialog, setShowIntakeDialog] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   const filteredCases = cases.filter((c) => {
     const matchesSearch =
@@ -79,509 +72,235 @@ export function Cases() {
     return matchesSearch && matchesType && matchesStatus && matchesOffice && matchesLawyer;
   });
 
-  const selectedCaseData = cases.find((c) => c.id === selectedCase);
+  // Pagination
+  const totalPages = Math.ceil(filteredCases.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedCases = filteredCases.slice(startIndex, startIndex + itemsPerPage);
+  const showingStart = filteredCases.length > 0 ? startIndex + 1 : 0;
+  const showingEnd = Math.min(startIndex + itemsPerPage, filteredCases.length);
 
-  const caseTypes: CaseType[] = ['GBV', 'Property Dispute', 'Child Custody', 'Maintenance', 'Domestic Violence', 'Land Dispute', 'Inheritance'];
-  const statuses: CaseStatus[] = ['Active', 'Pending Review', 'Awaiting Court', 'Closed-Resolved', 'Closed-Unresolved'];
-  const offices: Office[] = ['Lusaka', 'Ndola', 'Livingstone'];
-  const lawyers = staff.filter((s) => s.role === 'Lawyer');
-
-  const getWorkflowProgress = (status: string) => {
-    const stepIndex = workflowSteps.findIndex((step) => step.statuses.includes(status));
-    return stepIndex >= 0 ? ((stepIndex + 1) / workflowSteps.length) * 100 : 0;
-  };
+  // Status counts
+  const activeCount = cases.filter((c) => c.status === 'Active').length;
+  const pendingCount = cases.filter((c) => c.status === 'Pending Review').length;
+  const awaitingCourtCount = cases.filter((c) => c.status === 'Awaiting Court').length;
+  const closedResolvedCount = cases.filter((c) => c.status === 'Closed-Resolved').length;
+  const closedUnresolvedCount = cases.filter((c) => c.status === 'Closed-Unresolved').length;
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900">Case Management</h2>
-          <p className="text-slate-500 mt-1">Track and manage all legal cases across offices</p>
-        </div>
-        <Button
-          className="bg-teal-600 hover:bg-teal-700 text-white shadow-sm"
-          onClick={() => setShowIntakeDialog(true)}
+    <div className="space-y-8">
+      {/* Metrics Row */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div
+          className={`bg-surface-container-lowest rounded-lg border border-outline-variant/30 p-6 shadow-soft cursor-pointer transition-all ${
+            statusFilter === 'Active' ? 'ring-2 ring-primary/30 border-primary/50' : 'hover:border-outline-variant/60'
+          }`}
+          onClick={() => { setStatusFilter(statusFilter === 'Active' ? 'all' : 'Active'); setCurrentPage(1); }}
         >
-          <Plus className="w-4 h-4 mr-2" />
-          New Case
-        </Button>
+          <p className="text-display-lg text-on-surface" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: '48px', lineHeight: '56px', letterSpacing: '-0.02em' }}>{activeCount}</p>
+          <p className="text-label-md text-secondary mt-1" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', letterSpacing: '0.01em' }}>Active</p>
+        </div>
+        <div
+          className={`bg-surface-container-lowest rounded-lg border border-outline-variant/30 p-6 shadow-soft cursor-pointer transition-all ${
+            statusFilter === 'Pending Review' ? 'ring-2 ring-primary/30 border-primary/50' : 'hover:border-outline-variant/60'
+          }`}
+          onClick={() => { setStatusFilter(statusFilter === 'Pending Review' ? 'all' : 'Pending Review'); setCurrentPage(1); }}
+        >
+          <p className="text-display-lg text-on-surface" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: '48px', lineHeight: '56px', letterSpacing: '-0.02em' }}>{pendingCount}</p>
+          <p className="text-label-md text-secondary mt-1" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', letterSpacing: '0.01em' }}>Pending Review</p>
+        </div>
+        <div
+          className={`bg-surface-container-lowest rounded-lg border border-outline-variant/30 p-6 shadow-soft cursor-pointer transition-all ${
+            statusFilter === 'Awaiting Court' ? 'ring-2 ring-primary/30 border-primary/50' : 'hover:border-outline-variant/60'
+          }`}
+          onClick={() => { setStatusFilter(statusFilter === 'Awaiting Court' ? 'all' : 'Awaiting Court'); setCurrentPage(1); }}
+        >
+          <p className="text-display-lg text-on-surface" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: '48px', lineHeight: '56px', letterSpacing: '-0.02em' }}>{awaitingCourtCount}</p>
+          <p className="text-label-md text-secondary mt-1" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', letterSpacing: '0.01em' }}>Awaiting Court</p>
+        </div>
+        <div
+          className={`bg-surface-container-lowest rounded-lg border border-outline-variant/30 p-6 shadow-soft cursor-pointer transition-all ${
+            statusFilter === 'Closed-Resolved' ? 'ring-2 ring-primary/30 border-primary/50' : 'hover:border-outline-variant/60'
+          }`}
+          onClick={() => { setStatusFilter(statusFilter === 'Closed-Resolved' ? 'all' : 'Closed-Resolved'); setCurrentPage(1); }}
+        >
+          <p className="text-display-lg text-on-surface" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: '48px', lineHeight: '56px', letterSpacing: '-0.02em' }}>{closedResolvedCount}</p>
+          <p className="text-label-md text-secondary mt-1" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', letterSpacing: '0.01em' }}>Closed-Resolved</p>
+        </div>
+        <div
+          className={`bg-surface-container-lowest rounded-lg border border-outline-variant/30 p-6 shadow-soft cursor-pointer transition-all hidden md:block ${
+            statusFilter === 'Closed-Unresolved' ? 'ring-2 ring-primary/30 border-primary/50' : 'hover:border-outline-variant/60'
+          }`}
+          onClick={() => { setStatusFilter(statusFilter === 'Closed-Unresolved' ? 'all' : 'Closed-Unresolved'); setCurrentPage(1); }}
+        >
+          <p className="text-display-lg text-on-surface" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: '48px', lineHeight: '56px', letterSpacing: '-0.02em' }}>{closedUnresolvedCount}</p>
+          <p className="text-label-md text-secondary mt-1" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', letterSpacing: '0.01em' }}>Closed-Unresolved</p>
+        </div>
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        {statuses.map((status) => {
-          const count = cases.filter((c) => c.status === status).length;
-          return (
+      {/* Filters & Search */}
+      <div className="bg-surface-container-lowest rounded-lg border border-outline-variant/30 p-4 shadow-soft flex flex-col md:flex-row gap-4">
+        <div className="relative flex-1">
+          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-secondary text-sm">search</span>
+          <input
+            className="w-full pl-10 pr-4 py-2 border border-outline-variant/50 rounded-md text-on-surface placeholder:text-outline focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
+            style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '16px', lineHeight: '24px' }}
+            placeholder="Search by Case ID, client name, or description..."
+            type="text"
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
+          />
+        </div>
+        <div className="flex gap-4 overflow-x-auto pb-2 md:pb-0">
+          <select
+            className="border border-outline-variant/50 rounded-md px-4 py-2 min-w-[140px] focus:ring-2 focus:ring-primary focus:border-primary outline-none bg-white text-on-surface"
+            style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '16px', lineHeight: '24px' }}
+            value={typeFilter}
+            onChange={(e) => { setTypeFilter(e.target.value); setCurrentPage(1); }}
+          >
+            <option value="all">All Types</option>
+            <option value="Domestic Violence">Domestic Violence</option>
+            <option value="Maintenance">Maintenance</option>
+            <option value="GBV">GBV</option>
+            <option value="Property Dispute">Property Dispute</option>
+            <option value="Child Custody">Child Custody</option>
+            <option value="Land Dispute">Land Dispute</option>
+            <option value="Inheritance">Inheritance</option>
+          </select>
+          <select
+            className="border border-outline-variant/50 rounded-md px-4 py-2 min-w-[140px] focus:ring-2 focus:ring-primary focus:border-primary outline-none bg-white text-on-surface"
+            style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '16px', lineHeight: '24px' }}
+            value={statusFilter}
+            onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
+          >
+            <option value="all">All Status</option>
+            <option value="Active">Active</option>
+            <option value="Pending Review">Pending Review</option>
+            <option value="Awaiting Court">Awaiting Court</option>
+            <option value="Closed-Resolved">Closed-Resolved</option>
+            <option value="Closed-Unresolved">Closed-Unresolved</option>
+          </select>
+          <select
+            className="border border-outline-variant/50 rounded-md px-4 py-2 min-w-[140px] focus:ring-2 focus:ring-primary focus:border-primary outline-none bg-white text-on-surface hidden sm:block"
+            style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '16px', lineHeight: '24px' }}
+            value={officeFilter}
+            onChange={(e) => { setOfficeFilter(e.target.value); setCurrentPage(1); }}
+          >
+            <option value="all">All Offices</option>
+            <option value="Lusaka">Lusaka</option>
+            <option value="Ndola">Ndola</option>
+            <option value="Livingstone">Livingstone</option>
+          </select>
+          <select
+            className="border border-outline-variant/50 rounded-md px-4 py-2 min-w-[140px] focus:ring-2 focus:ring-primary focus:border-primary outline-none bg-white text-on-surface hidden lg:block"
+            style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '16px', lineHeight: '24px' }}
+            value={lawyerFilter}
+            onChange={(e) => { setLawyerFilter(e.target.value); setCurrentPage(1); }}
+          >
+            <option value="all">All Lawyers</option>
+            {lawyers.map((l) => (
+              <option key={l.id} value={l.id}>{l.name}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Data Table */}
+      <div className="bg-surface-container-lowest rounded-lg border border-outline-variant/30 shadow-soft overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-outline-variant/30 bg-surface-bright/50">
+                <th className="py-4 px-6 text-label-sm text-secondary uppercase tracking-wider" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em' }}>Case ID</th>
+                <th className="py-4 px-6 text-label-sm text-secondary uppercase tracking-wider" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em' }}>Client</th>
+                <th className="py-4 px-6 text-label-sm text-secondary uppercase tracking-wider" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em' }}>Type</th>
+                <th className="py-4 px-6 text-label-sm text-secondary uppercase tracking-wider" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em' }}>Status</th>
+                <th className="py-4 px-6 text-label-sm text-secondary uppercase tracking-wider hidden sm:table-cell" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em' }}>Assigned</th>
+                <th className="py-4 px-6 text-label-sm text-secondary uppercase tracking-wider hidden md:table-cell" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em' }}>Office</th>
+                <th className="py-4 px-6 text-label-sm text-secondary uppercase tracking-wider hidden lg:table-cell" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em' }}>Next Court</th>
+                <th className="py-4 px-6 text-label-sm text-secondary uppercase tracking-wider" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em' }}>Priority</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-outline-variant/20">
+              {paginatedCases.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="py-12 text-center text-secondary">
+                    No cases found matching your search criteria.
+                  </td>
+                </tr>
+              ) : (
+                paginatedCases.map((c) => (
+                  <tr key={c.id} className="hover:bg-surface-container-lowest/50 transition-colors group">
+                    <td className="py-3 px-6" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '16px', lineHeight: '24px' }}>
+                      <a className="text-primary font-medium group-hover:underline" href="#">{c.id}</a>
+                    </td>
+                    <td className="py-3 px-6 text-on-surface font-medium" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '16px', lineHeight: '24px' }}>{c.clientName}</td>
+                    <td className="py-3 px-6" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '16px', lineHeight: '24px' }}>
+                      <span className="px-2 py-1 border border-outline-variant/40 rounded-full text-[13px] text-secondary">{c.type}</span>
+                    </td>
+                    <td className="py-3 px-6" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '16px', lineHeight: '24px' }}>
+                      <span className={`px-3 py-1 rounded-full text-[13px] font-medium inline-flex items-center gap-1.5 border ${getStatusBadge(c.status)}`}>
+                        {c.status}
+                      </span>
+                    </td>
+                    <td className="py-3 px-6 text-secondary hidden sm:table-cell" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '16px', lineHeight: '24px' }}>{c.assignedLawyer}</td>
+                    <td className="py-3 px-6 text-secondary hidden md:table-cell" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '16px', lineHeight: '24px' }}>{c.office}</td>
+                    <td className="py-3 px-6 text-secondary hidden lg:table-cell" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '16px', lineHeight: '24px' }}>
+                      {c.nextCourtDate
+                        ? new Date(c.nextCourtDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+                        : '—'}
+                    </td>
+                    <td className="py-3 px-6" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '16px', lineHeight: '24px' }}>
+                      <span className={`px-3 py-1 rounded-full text-[13px] font-medium border ${getPriorityBadge(c.priority)}`}>
+                        {c.priority}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        <div className="border-t border-outline-variant/30 px-6 py-4 flex items-center justify-between bg-surface-container-lowest">
+          <p className="text-label-md text-secondary hidden sm:block" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', letterSpacing: '0.01em' }}>
+            Showing {showingStart} to {showingEnd} of {filteredCases.length} results
+          </p>
+          <div className="flex items-center gap-2">
             <button
-              key={status}
-              onClick={() => setStatusFilter(statusFilter === status ? 'all' : status)}
-              className={`p-3 rounded-lg border transition-all text-left ${
-                statusFilter === status
-                  ? 'border-teal-500 bg-teal-50 shadow-sm'
-                  : 'border-slate-200 bg-white hover:border-slate-300'
-              }`}
+              className="px-3 py-1.5 border border-outline-variant/50 rounded-md text-secondary hover:bg-surface-container-low transition-colors disabled:opacity-50"
+              style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', letterSpacing: '0.01em' }}
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(currentPage - 1)}
             >
-              <p className="text-xl font-bold text-slate-900">{count}</p>
-              <p className="text-xs text-slate-500 mt-0.5">{status}</p>
+              Previous
             </button>
-          );
-        })}
-      </div>
-
-      {/* Filters */}
-      <Card className="border-0 shadow-sm">
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <Input
-                placeholder="Search by Case ID, client name, or description..."
-                className="pl-9"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-full sm:w-[170px]">
-                <SelectValue placeholder="Case Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                {caseTypes.map((t) => (
-                  <SelectItem key={t} value={t}>{t}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-[160px]">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                {statuses.map((s) => (
-                  <SelectItem key={s} value={s}>{s}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={officeFilter} onValueChange={setOfficeFilter}>
-              <SelectTrigger className="w-full sm:w-[140px]">
-                <SelectValue placeholder="Office" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Offices</SelectItem>
-                {offices.map((o) => (
-                  <SelectItem key={o} value={o}>{o}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={lawyerFilter} onValueChange={setLawyerFilter}>
-              <SelectTrigger className="w-full sm:w-[170px]">
-                <SelectValue placeholder="Assigned Lawyer" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Lawyers</SelectItem>
-                {lawyers.map((l) => (
-                  <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Cases Table */}
-      <Card className="border-0 shadow-sm">
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-slate-50/80">
-                <TableHead className="font-semibold">Case ID</TableHead>
-                <TableHead className="font-semibold">Client</TableHead>
-                <TableHead className="font-semibold hidden md:table-cell">Type</TableHead>
-                <TableHead className="font-semibold">Status</TableHead>
-                <TableHead className="font-semibold hidden lg:table-cell">Assigned</TableHead>
-                <TableHead className="font-semibold hidden sm:table-cell">Office</TableHead>
-                <TableHead className="font-semibold hidden xl:table-cell">Next Court</TableHead>
-                <TableHead className="font-semibold">Priority</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredCases.map((c) => (
-                <TableRow
-                  key={c.id}
-                  className="cursor-pointer hover:bg-teal-50/30 transition-colors"
-                  onClick={() => setSelectedCase(c.id)}
-                >
-                  <TableCell className="font-mono text-sm font-medium text-teal-700">
-                    {c.id}
-                  </TableCell>
-                  <TableCell className="text-sm font-medium text-slate-900">{c.clientName}</TableCell>
-                  <TableCell className="hidden md:table-cell">
-                    <Badge variant="outline" className="text-xs font-normal">
-                      {c.type}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className={`text-xs ${getStatusColor(c.status)}`}>
-                      {c.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="hidden lg:table-cell text-sm text-slate-600">
-                    {c.assignedLawyer}
-                  </TableCell>
-                  <TableCell className="hidden sm:table-cell text-sm text-slate-600">{c.office}</TableCell>
-                  <TableCell className="hidden xl:table-cell text-sm text-slate-600">
-                    {c.nextCourtDate
-                      ? new Date(c.nextCourtDate).toLocaleDateString('en-GB', {
-                          day: 'numeric',
-                          month: 'short',
-                        })
-                      : '—'}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className={`text-xs ${getPriorityColor(c.priority)}`}>
-                      {c.priority}
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          {filteredCases.length === 0 && (
-            <div className="text-center py-12 text-slate-500">
-              <p className="text-sm">No cases found matching your search criteria.</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Case Detail Dialog */}
-      <Dialog open={!!selectedCase} onOpenChange={() => setSelectedCase(null)}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-          {selectedCaseData && (
-            <>
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-teal-50">
-                    <Gavel className="w-5 h-5 text-teal-600" />
-                  </div>
-                  <div>
-                    <p className="text-lg font-bold">{selectedCaseData.id}</p>
-                    <p className="text-sm font-normal text-slate-500">
-                      {selectedCaseData.type} · {selectedCaseData.clientName}
-                    </p>
-                  </div>
-                </DialogTitle>
-                <DialogDescription>Case details and progress</DialogDescription>
-              </DialogHeader>
-
-              <div className="space-y-5 mt-2">
-                {/* Status Workflow */}
-                <div>
-                  <h4 className="text-sm font-semibold text-slate-900 mb-3">Case Progress</h4>
-                  <div className="flex items-center gap-1">
-                    {workflowSteps.map((step, idx) => {
-                      const isActive = step.statuses.includes(selectedCaseData.status);
-                      const isPast =
-                        workflowSteps.findIndex((s) =>
-                          s.statuses.includes(selectedCaseData.status)
-                        ) > idx;
-                      return (
-                        <div key={step.label} className="flex items-center flex-1">
-                          <div
-                            className={`flex-1 p-2 rounded-lg text-center text-xs font-medium transition-all ${
-                              isActive
-                                ? 'bg-teal-600 text-white shadow-sm'
-                                : isPast
-                                ? 'bg-teal-100 text-teal-700'
-                                : 'bg-slate-100 text-slate-400'
-                            }`}
-                          >
-                            {step.label}
-                          </div>
-                          {idx < workflowSteps.length - 1 && (
-                            <ArrowRight className="w-4 h-4 text-slate-300 mx-1 flex-shrink-0" />
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <Separator />
-
-                {/* Case Info Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  <div>
-                    <p className="text-xs text-slate-500">Client</p>
-                    <p className="text-sm font-medium">{selectedCaseData.clientName}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-500">Case Type</p>
-                    <Badge variant="outline" className="text-xs mt-0.5">{selectedCaseData.type}</Badge>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-500">Status</p>
-                    <Badge variant="outline" className={`text-xs mt-0.5 ${getStatusColor(selectedCaseData.status)}`}>
-                      {selectedCaseData.status}
-                    </Badge>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-500">Assigned Lawyer</p>
-                    <p className="text-sm font-medium">{selectedCaseData.assignedLawyer}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-500">Office</p>
-                    <p className="text-sm font-medium">{selectedCaseData.office}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-500">Priority</p>
-                    <Badge variant="outline" className={`text-xs mt-0.5 ${getPriorityColor(selectedCaseData.priority)}`}>
-                      {selectedCaseData.priority}
-                    </Badge>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-500">Filing Date</p>
-                    <p className="text-sm font-medium">
-                      {new Date(selectedCaseData.filingDate).toLocaleDateString('en-GB', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                      })}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-500">Next Court Date</p>
-                    <p className="text-sm font-medium">
-                      {selectedCaseData.nextCourtDate
-                        ? new Date(selectedCaseData.nextCourtDate).toLocaleDateString('en-GB', {
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric',
-                          })
-                        : 'Not scheduled'}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-500">Court</p>
-                    <p className="text-sm font-medium">{selectedCaseData.courtName || 'N/A'}</p>
-                  </div>
-                </div>
-
-                <Separator />
-
-                {/* Description */}
-                <div>
-                  <h4 className="text-sm font-semibold text-slate-900 mb-2">Case Description</h4>
-                  <p className="text-sm text-slate-600 bg-slate-50 p-3 rounded-lg leading-relaxed">
-                    {selectedCaseData.description}
-                  </p>
-                </div>
-
-                {/* Opposing Party */}
-                <div>
-                  <h4 className="text-sm font-semibold text-slate-900 mb-2">Opposing Party</h4>
-                  <p className="text-sm text-slate-600">{selectedCaseData.opposingParty}</p>
-                </div>
-
-                <Separator />
-
-                {/* Quick Stats */}
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="p-3 bg-slate-50 rounded-lg text-center">
-                    <FileText className="w-4 h-4 text-slate-400 mx-auto mb-1" />
-                    <p className="text-lg font-bold text-slate-900">{selectedCaseData.documentsCount}</p>
-                    <p className="text-xs text-slate-500">Documents</p>
-                  </div>
-                  <div className="p-3 bg-slate-50 rounded-lg text-center">
-                    <CheckSquare className="w-4 h-4 text-slate-400 mx-auto mb-1" />
-                    <p className="text-lg font-bold text-slate-900">{selectedCaseData.tasksCount}</p>
-                    <p className="text-xs text-slate-500">Tasks</p>
-                  </div>
-                  <div className="p-3 bg-slate-50 rounded-lg text-center">
-                    <Calendar className="w-4 h-4 text-slate-400 mx-auto mb-1" />
-                    <p className="text-lg font-bold text-slate-900">
-                      {Math.max(
-                        1,
-                        Math.ceil(
-                          (new Date().getTime() -
-                            new Date(selectedCaseData.filingDate).getTime()) /
-                            (1000 * 60 * 60 * 24 * 30)
-                        )
-                      )}
-                    </p>
-                    <p className="text-xs text-slate-500">Months Active</p>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Case Intake Dialog */}
-      <Dialog open={showIntakeDialog} onOpenChange={setShowIntakeDialog}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Plus className="w-5 h-5 text-teal-600" />
-              New Case Intake
-            </DialogTitle>
-            <DialogDescription>Register a new legal case in the NLACW system</DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-6 mt-2">
-            {/* Client Information */}
-            <div>
-              <h4 className="text-sm font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                <User className="w-4 h-4 text-teal-600" />
-                Client Information
-              </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="text-sm font-medium text-slate-700">Client</label>
-                  <Select>
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Search or select client..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {cases.map((c) => (
-                        <SelectItem key={c.clientId} value={c.clientId}>
-                          {c.clientName} ({c.clientId})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-700">New Client? (Enter Name)</label>
-                  <Input placeholder="If not in list above" className="mt-1" />
-                </div>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Case Details */}
-            <div>
-              <h4 className="text-sm font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                <Gavel className="w-4 h-4 text-teal-600" />
-                Case Details
-              </h4>
-              <div className="space-y-3">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-sm font-medium text-slate-700">Case Type</label>
-                    <Select>
-                      <SelectTrigger className="mt-1">
-                        <SelectValue placeholder="Select case type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {caseTypes.map((t) => (
-                          <SelectItem key={t} value={t}>{t}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-slate-700">Priority</label>
-                    <Select>
-                      <SelectTrigger className="mt-1">
-                        <SelectValue placeholder="Select priority" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Urgent">Urgent</SelectItem>
-                        <SelectItem value="High">High</SelectItem>
-                        <SelectItem value="Medium">Medium</SelectItem>
-                        <SelectItem value="Low">Low</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-700">Case Description</label>
-                  <textarea
-                    className="w-full mt-1 p-2 border rounded-md text-sm resize-none h-24 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    placeholder="Describe the case details..."
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-700">Opposing Party</label>
-                  <Input placeholder="Name of opposing party" className="mt-1" />
-                </div>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Assignment */}
-            <div>
-              <h4 className="text-sm font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                <User className="w-4 h-4 text-teal-600" />
-                Assignment
-              </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="text-sm font-medium text-slate-700">Assigned Lawyer</label>
-                  <Select>
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Select lawyer" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {lawyers.map((l) => (
-                        <SelectItem key={l.id} value={l.id}>
-                          {l.name} ({l.activeCases} active cases)
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-700">Office</label>
-                  <Select>
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Select office" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {offices.map((o) => (
-                        <SelectItem key={o} value={o}>{o}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Supporting Documents */}
-            <div>
-              <h4 className="text-sm font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                <FileText className="w-4 h-4 text-teal-600" />
-                Supporting Documents
-              </h4>
-              <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center hover:border-teal-400 transition-colors cursor-pointer">
-                <FileText className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                <p className="text-sm text-slate-600 font-medium">Click to upload or drag files here</p>
-                <p className="text-xs text-slate-400 mt-1">PDF, DOC, JPG up to 10MB each</p>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-2">
-              <Button variant="outline" onClick={() => setShowIntakeDialog(false)}>
-                Cancel
-              </Button>
-              <Button
-                className="bg-teal-600 hover:bg-teal-700 text-white"
-                onClick={() => setShowIntakeDialog(false)}
+            {Array.from({ length: Math.min(3, totalPages) }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                className={`px-3 py-1.5 rounded-md transition-colors ${
+                  currentPage === page
+                    ? 'bg-primary text-white'
+                    : 'border border-outline-variant/50 text-secondary hover:bg-surface-container-low'
+                }`}
+                style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', letterSpacing: '0.01em' }}
+                onClick={() => setCurrentPage(page)}
               >
-                Create Case
-              </Button>
-            </div>
+                {page}
+              </button>
+            ))}
+            {totalPages > 3 && <span className="text-secondary px-1">...</span>}
+            <button
+              className="px-3 py-1.5 border border-outline-variant/50 rounded-md text-secondary hover:bg-surface-container-low transition-colors"
+              style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', letterSpacing: '0.01em' }}
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage(currentPage + 1)}
+            >
+              Next
+            </button>
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </div>
     </div>
   );
 }

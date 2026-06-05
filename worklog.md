@@ -111,3 +111,30 @@ Stage Summary:
 - Sidebar: LogOut icon button with tooltip
 - Both logout options navigate to /auth/login page
 - User can authenticate out of the application from the dashboard
+
+---
+Task ID: 6
+Agent: Main Agent
+Task: Replace Cases page with the user's exact HTML design
+
+Work Log:
+- Rewrote /src/components/cms/cases.tsx to match the exact HTML design provided by user
+- Implemented 5 metric cards in a 2-col/5-col grid: Active (11), Pending Review (3), Awaiting Court (4), Closed-Resolved (2), Closed-Unresolved (2)
+- Metric cards are clickable to filter by status, with active ring indicator
+- Implemented filter/search bar with search input + 4 dropdown selects (Type, Status, Office, Lawyer)
+- Search uses Material Symbols "search" icon, responsive hide/show for Office and Lawyer selects
+- Implemented data table with 8 columns: Case ID, Client, Type, Status, Assigned, Office, Next Court, Priority
+- Status badges use color-coded pills matching HTML: Active=green, Awaiting Court=blue, Pending Review=yellow, etc.
+- Priority badges: Urgent=red, High=orange, Medium=yellow, Low=gray
+- Type column uses bordered pill badges
+- Responsive column hiding: Assigned hidden on sm-, Office hidden on md-, Next Court hidden on lg-
+- Implemented pagination: Previous/Next buttons, page numbers (1, 2, 3, ...), "Showing X to Y of Z results"
+- Added shadow-soft utility class to globals.css
+- Uses real mock data from mock-data.ts (22 cases) with filtering and pagination
+- Build succeeds, verified content in HTML output
+
+Stage Summary:
+- Cases page fully redesigned to match user's exact HTML design
+- Metrics row, filter bar, data table, and pagination all implemented
+- All NLACW theme tokens and Material Symbols icons used
+- Filtering and pagination are fully functional with real data
