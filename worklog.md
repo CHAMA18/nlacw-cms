@@ -55,3 +55,38 @@ Stage Summary:
 - Final PDF: /home/z/my-project/download/NLACW_CMS_Proposal.pdf (19 pages, 175KB)
 - Cover page with institutional sidebar design
 - Comprehensive proposal with ZMW pricing (K1,685,000 total investment)
+
+---
+Task ID: 4
+Agent: Main Agent
+Task: Build authentication pages (signup + login) with the user's exact HTML design
+
+Work Log:
+- Updated globals.css with NLACW custom color theme tokens (30+ color tokens, custom spacing, font families, font sizes)
+- Mapped primary color to NLACW teal (#006158), updated shadcn/ui CSS variables to NLACW brand
+- Created /src/app/auth/layout.tsx with Inter font and Material Symbols Outlined icons
+- Created /src/app/auth/signup/page.tsx with exact HTML design from user:
+  - Left split: Brand imagery with teal overlay, "Advocacy, Elevated." tagline
+  - Right split: Form canvas with Full Name, Email, Organization, Password fields
+  - Password visibility toggle with Material Symbols icons
+  - Password strength meter (Weak/Fair/Strong)
+  - "Create Account" button with arrow_forward icon
+  - Trust signal ("Secure & Confidential")
+  - Login redirect link
+  - Mobile brand anchor (NLACW) on small screens
+  - Minimal footer with copyright
+- Created /src/app/auth/login/page.tsx matching signup design:
+  - Left split: "Justice, Accessible." tagline
+  - Right split: Email, Password fields with Remember me checkbox
+  - Forgot password link
+  - Signup redirect link
+- Updated root layout.tsx to include Inter font and Material Symbols
+- Updated sidebar.tsx with functional LogOut button navigating to /auth/login
+- Build succeeds, all pages return HTTP 200
+
+Stage Summary:
+- Signup page: /auth/signup - exact design from user's HTML code
+- Login page: /auth/login - matching design
+- All NLACW custom theme tokens integrated into Tailwind v4
+- Password toggle and strength meter fully functional
+- LogOut button in sidebar now navigates to login page

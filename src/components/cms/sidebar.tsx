@@ -24,6 +24,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { staff } from '@/lib/mock-data';
+import { useRouter } from 'next/navigation';
 
 export type NavItem = 'dashboard' | 'clients' | 'cases' | 'calendar' | 'documents' | 'tasks' | 'reports' | 'settings';
 
@@ -46,6 +47,12 @@ const navItems: { id: NavItem; label: string; icon: React.ComponentType<{ classN
 const currentUser = staff[0]; // Admin user
 
 export function Sidebar({ activeItem, onNavigate, collapsed, onToggleCollapse }: SidebarProps) {
+  const router = useRouter();
+
+  const handleLogout = () => {
+    router.push('/auth/login');
+  };
+
   return (
     <TooltipProvider delayDuration={0}>
       <div
@@ -126,7 +133,7 @@ export function Sidebar({ activeItem, onNavigate, collapsed, onToggleCollapse }:
                 <p className="text-[14px] font-medium text-white truncate">{currentUser.name}</p>
                 <p className="text-[11px] text-[#7bd6c9] font-medium">{currentUser.role}</p>
               </div>
-              <button className="text-[#bdc7da]/50 hover:text-white transition-colors p-1">
+              <button className="text-[#bdc7da]/50 hover:text-white transition-colors p-1" onClick={handleLogout}>
                 <LogOut className="w-4 h-4" />
               </button>
             </div>
