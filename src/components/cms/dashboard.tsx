@@ -340,37 +340,40 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             <h3 className="text-[20px] font-semibold text-[#0b1c30] leading-7">Case Status Overview</h3>
             <p className="text-[14px] text-[#3e4947] mt-0.5">All cases by current status</p>
           </div>
-          <div className="p-2">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-[12px] font-semibold text-[#3e4947] tracking-[0.05em]">Status</TableHead>
-                  <TableHead className="text-[12px] font-semibold text-[#3e4947] tracking-[0.05em] text-right">Count</TableHead>
-                  <TableHead className="text-[12px] font-semibold text-[#3e4947] tracking-[0.05em] text-right">%</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {caseStatusBreakdown.map((item) => {
-                  const total = caseStatusBreakdown.reduce((sum, i) => sum + i.count, 0);
-                  const percentage = ((item.count / total) * 100).toFixed(1);
-                  return (
-                    <TableRow key={item.status}>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-2.5 h-2.5 rounded-full"
-                            style={{ backgroundColor: item.color }}
-                          />
-                          <span className="text-[14px] text-[#0b1c30]">{item.status}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right font-medium text-[14px] text-[#0b1c30]">{item.count}</TableCell>
-                      <TableCell className="text-right text-[14px] text-[#3e4947]">{percentage}%</TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+          <div className="p-3">
+            <div className="space-y-3">
+              {caseStatusBreakdown.map((item) => {
+                const total = caseStatusBreakdown.reduce((sum, i) => sum + i.count, 0);
+                const percentage = ((item.count / total) * 100).toFixed(1);
+                return (
+                  <div key={item.status} className="group">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-2.5 h-2.5 rounded-full"
+                          style={{ backgroundColor: item.color }}
+                        />
+                        <span className="text-[13px] font-medium text-[#0b1c30]">{item.status}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[13px] font-semibold text-[#0b1c30]">{item.count}</span>
+                        <span className="text-[11px] text-[#3e4947] min-w-[36px] text-right">{percentage}%</span>
+                      </div>
+                    </div>
+                    <div className="h-1.5 bg-[#e5eeff] rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-500 ease-out"
+                        style={{
+                          width: `${percentage}%`,
+                          backgroundColor: item.color,
+                          opacity: 0.8,
+                        }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>

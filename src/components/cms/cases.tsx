@@ -16,38 +16,43 @@ const statuses: CaseStatus[] = ['Active', 'Pending Review', 'Awaiting Court', 'C
 const offices: Office[] = ['Lusaka', 'Ndola', 'Livingstone'];
 const lawyers = staff.filter((s) => s.role === 'Lawyer');
 
-// Status badge color mapping matching the HTML design
+// Status badge with dot indicator and NLACW design tokens
 function getStatusBadge(status: string) {
   switch (status) {
     case 'Active':
-      return 'bg-green-100 text-green-800 border-green-200';
+      return { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', dot: 'bg-emerald-500' };
     case 'Awaiting Court':
-      return 'bg-blue-100 text-blue-800 border-blue-200';
+      return { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', dot: 'bg-blue-500' };
     case 'Pending Review':
-      return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      return { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', dot: 'bg-amber-500' };
     case 'Closed-Resolved':
-      return 'bg-green-100 text-green-800 border-green-200';
+      return { bg: 'bg-teal-50', text: 'text-teal-700', border: 'border-teal-200', dot: 'bg-teal-500' };
     case 'Closed-Unresolved':
-      return 'bg-gray-100 text-gray-800 border-gray-200';
+      return { bg: 'bg-slate-50', text: 'text-slate-600', border: 'border-slate-200', dot: 'bg-slate-400' };
     default:
-      return 'bg-gray-100 text-gray-800 border-gray-200';
+      return { bg: 'bg-slate-50', text: 'text-slate-600', border: 'border-slate-200', dot: 'bg-slate-400' };
   }
 }
 
-// Priority badge color mapping matching the HTML design
+// Priority badge with icon indicator
 function getPriorityBadge(priority: string) {
   switch (priority) {
     case 'Urgent':
-      return 'bg-red-100 text-red-800 border-red-200';
+      return { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200', icon: '↑' };
     case 'High':
-      return 'bg-orange-100 text-orange-800 border-orange-200';
+      return { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200', icon: '↗' };
     case 'Medium':
-      return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      return { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', icon: '→' };
     case 'Low':
-      return 'bg-gray-100 text-gray-800 border-gray-200';
+      return { bg: 'bg-slate-50', text: 'text-slate-600', border: 'border-slate-200', icon: '↓' };
     default:
-      return 'bg-gray-100 text-gray-800 border-gray-200';
+      return { bg: 'bg-slate-50', text: 'text-slate-600', border: 'border-slate-200', icon: '→' };
   }
+}
+
+function getLawyerAvatar(name: string) {
+  const parts = name.split(' ');
+  return parts.length >= 2 ? parts[0][0] + parts[1][0] : name.substring(0, 2);
 }
 
 export function Cases() {
@@ -57,7 +62,8 @@ export function Cases() {
   const [officeFilter, setOfficeFilter] = useState<string>('all');
   const [lawyerFilter, setLawyerFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const [selectedCase, setSelectedCase] = useState<string | null>(null);
+  const itemsPerPage = 8;
 
   const filteredCases = cases.filter((c) => {
     const matchesSearch =
@@ -79,6 +85,23 @@ export function Cases() {
   const showingStart = filteredCases.length > 0 ? startIndex + 1 : 0;
   const showingEnd = Math.min(startIndex + itemsPerPage, filteredCases.length);
 
+  // Generate page numbers
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (currentPage > 3) pages.push('...');
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+      for (let i = start; i <= end; i++) pages.push(i);
+      if (currentPage < totalPages - 2) pages.push('...');
+      pages.push(totalPages);
+    }
+    return pages;
+  };
+
   // Status counts
   const activeCount = cases.filter((c) => c.status === 'Active').length;
   const pendingCount = cases.filter((c) => c.status === 'Pending Review').length;
@@ -86,217 +109,258 @@ export function Cases() {
   const closedResolvedCount = cases.filter((c) => c.status === 'Closed-Resolved').length;
   const closedUnresolvedCount = cases.filter((c) => c.status === 'Closed-Unresolved').length;
 
+  const selectedCaseData = cases.find((c) => c.id === selectedCase);
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Metrics Row */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <div
-          className={`bg-surface-container-lowest rounded-lg border border-outline-variant/30 p-6 shadow-soft cursor-pointer transition-all ${
-            statusFilter === 'Active' ? 'ring-2 ring-primary/30 border-primary/50' : 'hover:border-outline-variant/60'
-          }`}
-          onClick={() => { setStatusFilter(statusFilter === 'Active' ? 'all' : 'Active'); setCurrentPage(1); }}
-        >
-          <p className="text-display-lg text-on-surface" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: '48px', lineHeight: '56px', letterSpacing: '-0.02em' }}>{activeCount}</p>
-          <p className="text-label-md text-secondary mt-1" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', letterSpacing: '0.01em' }}>Active</p>
-        </div>
-        <div
-          className={`bg-surface-container-lowest rounded-lg border border-outline-variant/30 p-6 shadow-soft cursor-pointer transition-all ${
-            statusFilter === 'Pending Review' ? 'ring-2 ring-primary/30 border-primary/50' : 'hover:border-outline-variant/60'
-          }`}
-          onClick={() => { setStatusFilter(statusFilter === 'Pending Review' ? 'all' : 'Pending Review'); setCurrentPage(1); }}
-        >
-          <p className="text-display-lg text-on-surface" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: '48px', lineHeight: '56px', letterSpacing: '-0.02em' }}>{pendingCount}</p>
-          <p className="text-label-md text-secondary mt-1" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', letterSpacing: '0.01em' }}>Pending Review</p>
-        </div>
-        <div
-          className={`bg-surface-container-lowest rounded-lg border border-outline-variant/30 p-6 shadow-soft cursor-pointer transition-all ${
-            statusFilter === 'Awaiting Court' ? 'ring-2 ring-primary/30 border-primary/50' : 'hover:border-outline-variant/60'
-          }`}
-          onClick={() => { setStatusFilter(statusFilter === 'Awaiting Court' ? 'all' : 'Awaiting Court'); setCurrentPage(1); }}
-        >
-          <p className="text-display-lg text-on-surface" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: '48px', lineHeight: '56px', letterSpacing: '-0.02em' }}>{awaitingCourtCount}</p>
-          <p className="text-label-md text-secondary mt-1" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', letterSpacing: '0.01em' }}>Awaiting Court</p>
-        </div>
-        <div
-          className={`bg-surface-container-lowest rounded-lg border border-outline-variant/30 p-6 shadow-soft cursor-pointer transition-all ${
-            statusFilter === 'Closed-Resolved' ? 'ring-2 ring-primary/30 border-primary/50' : 'hover:border-outline-variant/60'
-          }`}
-          onClick={() => { setStatusFilter(statusFilter === 'Closed-Resolved' ? 'all' : 'Closed-Resolved'); setCurrentPage(1); }}
-        >
-          <p className="text-display-lg text-on-surface" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: '48px', lineHeight: '56px', letterSpacing: '-0.02em' }}>{closedResolvedCount}</p>
-          <p className="text-label-md text-secondary mt-1" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', letterSpacing: '0.01em' }}>Closed-Resolved</p>
-        </div>
-        <div
-          className={`bg-surface-container-lowest rounded-lg border border-outline-variant/30 p-6 shadow-soft cursor-pointer transition-all hidden md:block ${
-            statusFilter === 'Closed-Unresolved' ? 'ring-2 ring-primary/30 border-primary/50' : 'hover:border-outline-variant/60'
-          }`}
-          onClick={() => { setStatusFilter(statusFilter === 'Closed-Unresolved' ? 'all' : 'Closed-Unresolved'); setCurrentPage(1); }}
-        >
-          <p className="text-display-lg text-on-surface" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: '48px', lineHeight: '56px', letterSpacing: '-0.02em' }}>{closedUnresolvedCount}</p>
-          <p className="text-label-md text-secondary mt-1" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', letterSpacing: '0.01em' }}>Closed-Unresolved</p>
-        </div>
+        {[
+          { label: 'Active', count: activeCount, status: 'Active', color: 'from-emerald-500 to-emerald-600', dotColor: 'bg-emerald-400' },
+          { label: 'Pending Review', count: pendingCount, status: 'Pending Review', color: 'from-amber-500 to-amber-600', dotColor: 'bg-amber-400' },
+          { label: 'Awaiting Court', count: awaitingCourtCount, status: 'Awaiting Court', color: 'from-blue-500 to-blue-600', dotColor: 'bg-blue-400' },
+          { label: 'Resolved', count: closedResolvedCount, status: 'Closed-Resolved', color: 'from-teal-500 to-teal-600', dotColor: 'bg-teal-400' },
+          { label: 'Unresolved', count: closedUnresolvedCount, status: 'Closed-Unresolved', color: 'from-slate-400 to-slate-500', dotColor: 'bg-slate-400' },
+        ].map((metric) => (
+          <div
+            key={metric.label}
+            className={`bg-surface-container-lowest rounded-xl border border-outline-variant/30 p-5 shadow-sm cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${
+              statusFilter === metric.status ? 'ring-2 ring-primary/30 border-primary/50 shadow-md' : ''
+            }`}
+            onClick={() => { setStatusFilter(statusFilter === metric.status ? 'all' : metric.status); setCurrentPage(1); }}
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <div className={`w-2 h-2 rounded-full ${metric.dotColor}`} />
+              <span className="font-label-sm text-label-sm text-secondary uppercase tracking-wider">{metric.label}</span>
+            </div>
+            <p className="text-headline-lg text-on-surface" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: '30px', lineHeight: '38px', letterSpacing: '-0.01em' }}>{metric.count}</p>
+          </div>
+        ))}
       </div>
 
       {/* Filters & Search */}
-      <div className="bg-surface-container-lowest rounded-lg border border-outline-variant/30 p-4 shadow-soft flex flex-col md:flex-row gap-4">
-        <div className="relative flex-1">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-secondary text-sm">search</span>
-          <input
-            className="w-full pl-10 pr-4 py-2 border border-outline-variant/50 rounded-md text-on-surface placeholder:text-outline focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
-            style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '16px', lineHeight: '24px' }}
-            placeholder="Search by Case ID, client name, or description..."
-            type="text"
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
-          />
+      <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-sm p-4">
+        <div className="flex flex-col md:flex-row gap-3">
+          <div className="relative flex-1">
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">search</span>
+            <input
+              className="w-full pl-10 pr-4 py-2.5 bg-surface-container-lowest border border-outline-variant/50 rounded-lg text-on-surface placeholder:text-outline/70 focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all text-sm"
+              placeholder="Search by Case ID, client name, or description..."
+              type="text"
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
+            />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <select
+              className="border border-outline-variant/50 rounded-lg px-3 py-2.5 min-w-[130px] focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none bg-surface-container-lowest text-on-surface text-sm"
+              value={typeFilter}
+              onChange={(e) => { setTypeFilter(e.target.value); setCurrentPage(1); }}
+            >
+              <option value="all">All Types</option>
+              {caseTypes.map((t) => <option key={t} value={t}>{t}</option>)}
+            </select>
+            <select
+              className="border border-outline-variant/50 rounded-lg px-3 py-2.5 min-w-[130px] focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none bg-surface-container-lowest text-on-surface text-sm"
+              value={statusFilter}
+              onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
+            >
+              <option value="all">All Status</option>
+              {statuses.map((s) => <option key={s} value={s}>{s}</option>)}
+            </select>
+            <select
+              className="border border-outline-variant/50 rounded-lg px-3 py-2.5 min-w-[130px] focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none bg-surface-container-lowest text-on-surface text-sm hidden sm:block"
+              value={officeFilter}
+              onChange={(e) => { setOfficeFilter(e.target.value); setCurrentPage(1); }}
+            >
+              <option value="all">All Offices</option>
+              {offices.map((o) => <option key={o} value={o}>{o}</option>)}
+            </select>
+            <select
+              className="border border-outline-variant/50 rounded-lg px-3 py-2.5 min-w-[130px] focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none bg-surface-container-lowest text-on-surface text-sm hidden lg:block"
+              value={lawyerFilter}
+              onChange={(e) => { setLawyerFilter(e.target.value); setCurrentPage(1); }}
+            >
+              <option value="all">All Lawyers</option>
+              {lawyers.map((l) => (
+                <option key={l.id} value={l.id}>{l.name}</option>
+              ))}
+            </select>
+          </div>
         </div>
-        <div className="flex gap-4 overflow-x-auto pb-2 md:pb-0">
-          <select
-            className="border border-outline-variant/50 rounded-md px-4 py-2 min-w-[140px] focus:ring-2 focus:ring-primary focus:border-primary outline-none bg-white text-on-surface"
-            style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '16px', lineHeight: '24px' }}
-            value={typeFilter}
-            onChange={(e) => { setTypeFilter(e.target.value); setCurrentPage(1); }}
-          >
-            <option value="all">All Types</option>
-            <option value="Domestic Violence">Domestic Violence</option>
-            <option value="Maintenance">Maintenance</option>
-            <option value="GBV">GBV</option>
-            <option value="Property Dispute">Property Dispute</option>
-            <option value="Child Custody">Child Custody</option>
-            <option value="Land Dispute">Land Dispute</option>
-            <option value="Inheritance">Inheritance</option>
-          </select>
-          <select
-            className="border border-outline-variant/50 rounded-md px-4 py-2 min-w-[140px] focus:ring-2 focus:ring-primary focus:border-primary outline-none bg-white text-on-surface"
-            style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '16px', lineHeight: '24px' }}
-            value={statusFilter}
-            onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
-          >
-            <option value="all">All Status</option>
-            <option value="Active">Active</option>
-            <option value="Pending Review">Pending Review</option>
-            <option value="Awaiting Court">Awaiting Court</option>
-            <option value="Closed-Resolved">Closed-Resolved</option>
-            <option value="Closed-Unresolved">Closed-Unresolved</option>
-          </select>
-          <select
-            className="border border-outline-variant/50 rounded-md px-4 py-2 min-w-[140px] focus:ring-2 focus:ring-primary focus:border-primary outline-none bg-white text-on-surface hidden sm:block"
-            style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '16px', lineHeight: '24px' }}
-            value={officeFilter}
-            onChange={(e) => { setOfficeFilter(e.target.value); setCurrentPage(1); }}
-          >
-            <option value="all">All Offices</option>
-            <option value="Lusaka">Lusaka</option>
-            <option value="Ndola">Ndola</option>
-            <option value="Livingstone">Livingstone</option>
-          </select>
-          <select
-            className="border border-outline-variant/50 rounded-md px-4 py-2 min-w-[140px] focus:ring-2 focus:ring-primary focus:border-primary outline-none bg-white text-on-surface hidden lg:block"
-            style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '16px', lineHeight: '24px' }}
-            value={lawyerFilter}
-            onChange={(e) => { setLawyerFilter(e.target.value); setCurrentPage(1); }}
-          >
-            <option value="all">All Lawyers</option>
-            {lawyers.map((l) => (
-              <option key={l.id} value={l.id}>{l.name}</option>
-            ))}
-          </select>
-        </div>
+        {/* Active filter indicator */}
+        {(typeFilter !== 'all' || statusFilter !== 'all' || officeFilter !== 'all' || lawyerFilter !== 'all' || search !== '') && (
+          <div className="flex items-center gap-2 mt-3 pt-3 border-t border-outline-variant/20">
+            <span className="text-xs text-secondary">Active filters:</span>
+            {search !== '' && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary rounded-md text-xs font-medium">
+                Search: &ldquo;{search}&rdquo;
+                <button onClick={() => { setSearch(''); setCurrentPage(1); }} className="hover:text-on-primary-fixed-variant">×</button>
+              </span>
+            )}
+            {typeFilter !== 'all' && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary rounded-md text-xs font-medium">
+                Type: {typeFilter}
+                <button onClick={() => { setTypeFilter('all'); setCurrentPage(1); }} className="hover:text-on-primary-fixed-variant">×</button>
+              </span>
+            )}
+            {statusFilter !== 'all' && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary rounded-md text-xs font-medium">
+                Status: {statusFilter}
+                <button onClick={() => { setStatusFilter('all'); setCurrentPage(1); }} className="hover:text-on-primary-fixed-variant">×</button>
+              </span>
+            )}
+            {officeFilter !== 'all' && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary rounded-md text-xs font-medium">
+                Office: {officeFilter}
+                <button onClick={() => { setOfficeFilter('all'); setCurrentPage(1); }} className="hover:text-on-primary-fixed-variant">×</button>
+              </span>
+            )}
+            {lawyerFilter !== 'all' && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary rounded-md text-xs font-medium">
+                Lawyer: {lawyers.find(l => l.id === lawyerFilter)?.name}
+                <button onClick={() => { setLawyerFilter('all'); setCurrentPage(1); }} className="hover:text-on-primary-fixed-variant">×</button>
+              </span>
+            )}
+            <button
+              className="text-xs text-error hover:underline ml-1"
+              onClick={() => { setSearch(''); setTypeFilter('all'); setStatusFilter('all'); setOfficeFilter('all'); setLawyerFilter('all'); setCurrentPage(1); }}
+            >
+              Clear all
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Data Table */}
-      <div className="bg-surface-container-lowest rounded-lg border border-outline-variant/30 shadow-soft overflow-hidden">
+      <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-outline-variant/30 bg-surface-bright/50">
-                <th className="py-4 px-6 text-label-sm text-secondary uppercase tracking-wider" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em' }}>Case ID</th>
-                <th className="py-4 px-6 text-label-sm text-secondary uppercase tracking-wider" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em' }}>Client</th>
-                <th className="py-4 px-6 text-label-sm text-secondary uppercase tracking-wider" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em' }}>Type</th>
-                <th className="py-4 px-6 text-label-sm text-secondary uppercase tracking-wider" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em' }}>Status</th>
-                <th className="py-4 px-6 text-label-sm text-secondary uppercase tracking-wider hidden sm:table-cell" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em' }}>Assigned</th>
-                <th className="py-4 px-6 text-label-sm text-secondary uppercase tracking-wider hidden md:table-cell" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em' }}>Office</th>
-                <th className="py-4 px-6 text-label-sm text-secondary uppercase tracking-wider hidden lg:table-cell" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em' }}>Next Court</th>
-                <th className="py-4 px-6 text-label-sm text-secondary uppercase tracking-wider" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em' }}>Priority</th>
+              <tr className="border-b border-outline-variant/30 bg-surface-container-low">
+                <th className="py-3.5 px-5 text-[11px] text-on-surface-variant uppercase tracking-[0.08em] font-semibold">Case ID</th>
+                <th className="py-3.5 px-5 text-[11px] text-on-surface-variant uppercase tracking-[0.08em] font-semibold">Client</th>
+                <th className="py-3.5 px-5 text-[11px] text-on-surface-variant uppercase tracking-[0.08em] font-semibold">Type</th>
+                <th className="py-3.5 px-5 text-[11px] text-on-surface-variant uppercase tracking-[0.08em] font-semibold">Status</th>
+                <th className="py-3.5 px-5 text-[11px] text-on-surface-variant uppercase tracking-[0.08em] font-semibold hidden sm:table-cell">Assigned</th>
+                <th className="py-3.5 px-5 text-[11px] text-on-surface-variant uppercase tracking-[0.08em] font-semibold hidden md:table-cell">Office</th>
+                <th className="py-3.5 px-5 text-[11px] text-on-surface-variant uppercase tracking-[0.08em] font-semibold hidden lg:table-cell">Next Court</th>
+                <th className="py-3.5 px-5 text-[11px] text-on-surface-variant uppercase tracking-[0.08em] font-semibold">Priority</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-outline-variant/20">
+            <tbody className="divide-y divide-outline-variant/15">
               {paginatedCases.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-secondary">
-                    No cases found matching your search criteria.
+                  <td colSpan={8} className="py-16 text-center">
+                    <span className="material-symbols-outlined text-[40px] text-outline/30 mb-2 block">search_off</span>
+                    <p className="text-secondary text-sm font-medium">No cases found</p>
+                    <p className="text-outline text-xs mt-1">Try adjusting your search or filter criteria</p>
                   </td>
                 </tr>
               ) : (
-                paginatedCases.map((c) => (
-                  <tr key={c.id} className="hover:bg-surface-container-lowest/50 transition-colors group">
-                    <td className="py-3 px-6" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '16px', lineHeight: '24px' }}>
-                      <a className="text-primary font-medium group-hover:underline" href="#">{c.id}</a>
-                    </td>
-                    <td className="py-3 px-6 text-on-surface font-medium" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '16px', lineHeight: '24px' }}>{c.clientName}</td>
-                    <td className="py-3 px-6" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '16px', lineHeight: '24px' }}>
-                      <span className="px-2 py-1 border border-outline-variant/40 rounded-full text-[13px] text-secondary">{c.type}</span>
-                    </td>
-                    <td className="py-3 px-6" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '16px', lineHeight: '24px' }}>
-                      <span className={`px-3 py-1 rounded-full text-[13px] font-medium inline-flex items-center gap-1.5 border ${getStatusBadge(c.status)}`}>
-                        {c.status}
-                      </span>
-                    </td>
-                    <td className="py-3 px-6 text-secondary hidden sm:table-cell" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '16px', lineHeight: '24px' }}>{c.assignedLawyer}</td>
-                    <td className="py-3 px-6 text-secondary hidden md:table-cell" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '16px', lineHeight: '24px' }}>{c.office}</td>
-                    <td className="py-3 px-6 text-secondary hidden lg:table-cell" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '16px', lineHeight: '24px' }}>
-                      {c.nextCourtDate
-                        ? new Date(c.nextCourtDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-                        : '—'}
-                    </td>
-                    <td className="py-3 px-6" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '16px', lineHeight: '24px' }}>
-                      <span className={`px-3 py-1 rounded-full text-[13px] font-medium border ${getPriorityBadge(c.priority)}`}>
-                        {c.priority}
-                      </span>
-                    </td>
-                  </tr>
-                ))
+                paginatedCases.map((c) => {
+                  const statusBadge = getStatusBadge(c.status);
+                  const priorityBadge = getPriorityBadge(c.priority);
+                  return (
+                    <tr
+                      key={c.id}
+                      className={`hover:bg-primary/[0.03] transition-colors cursor-pointer group ${
+                        selectedCase === c.id ? 'bg-primary/[0.06]' : ''
+                      }`}
+                      onClick={() => setSelectedCase(selectedCase === c.id ? null : c.id)}
+                    >
+                      <td className="py-3.5 px-5">
+                        <span className="text-primary font-semibold text-sm group-hover:underline decoration-primary/30 underline-offset-2">
+                          {c.id}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-5">
+                        <span className="text-on-surface text-sm font-medium">{c.clientName}</span>
+                      </td>
+                      <td className="py-3.5 px-5">
+                        <span className="inline-flex items-center px-2.5 py-1 bg-surface-container rounded-md text-[12px] text-on-surface-variant font-medium border border-outline-variant/20">
+                          {c.type}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-5">
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12px] font-medium border ${statusBadge.bg} ${statusBadge.text} ${statusBadge.border}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${statusBadge.dot}`} />
+                          {c.status}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-5 hidden sm:table-cell">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-7 h-7 rounded-full bg-primary-container/20 flex items-center justify-center text-[10px] font-bold text-primary flex-shrink-0">
+                            {getLawyerAvatar(c.assignedLawyer)}
+                          </div>
+                          <span className="text-on-surface-variant text-sm">{c.assignedLawyer}</span>
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-5 hidden md:table-cell">
+                        <span className="text-on-surface-variant text-sm">{c.office}</span>
+                      </td>
+                      <td className="py-3.5 px-5 hidden lg:table-cell">
+                        {c.nextCourtDate ? (
+                          <span className="inline-flex items-center gap-1.5 text-on-surface-variant text-sm">
+                            <span className="material-symbols-outlined text-[16px] text-outline">calendar_today</span>
+                            {new Date(c.nextCourtDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                          </span>
+                        ) : (
+                          <span className="text-outline/50 text-sm">—</span>
+                        )}
+                      </td>
+                      <td className="py-3.5 px-5">
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-semibold border ${priorityBadge.bg} ${priorityBadge.text} ${priorityBadge.border}`}>
+                          <span className="text-[10px]">{priorityBadge.icon}</span>
+                          {c.priority}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
 
         {/* Pagination */}
-        <div className="border-t border-outline-variant/30 px-6 py-4 flex items-center justify-between bg-surface-container-lowest">
-          <p className="text-label-md text-secondary hidden sm:block" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', letterSpacing: '0.01em' }}>
-            Showing {showingStart} to {showingEnd} of {filteredCases.length} results
+        <div className="border-t border-outline-variant/20 px-5 py-3.5 flex items-center justify-between bg-surface-container-lowest/50">
+          <p className="text-xs text-secondary hidden sm:block">
+            Showing <span className="font-semibold text-on-surface">{showingStart}</span> to <span className="font-semibold text-on-surface">{showingEnd}</span> of <span className="font-semibold text-on-surface">{filteredCases.length}</span> results
           </p>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <button
-              className="px-3 py-1.5 border border-outline-variant/50 rounded-md text-secondary hover:bg-surface-container-low transition-colors disabled:opacity-50"
-              style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', letterSpacing: '0.01em' }}
+              className="inline-flex items-center gap-1 px-3 py-2 border border-outline-variant/40 rounded-lg text-secondary hover:bg-surface-container-low hover:text-on-surface transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-xs font-medium"
               disabled={currentPage === 1}
               onClick={() => setCurrentPage(currentPage - 1)}
             >
+              <span className="material-symbols-outlined text-[16px]">chevron_left</span>
               Previous
             </button>
-            {Array.from({ length: Math.min(3, totalPages) }, (_, i) => i + 1).map((page) => (
-              <button
-                key={page}
-                className={`px-3 py-1.5 rounded-md transition-colors ${
-                  currentPage === page
-                    ? 'bg-primary text-white'
-                    : 'border border-outline-variant/50 text-secondary hover:bg-surface-container-low'
-                }`}
-                style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', letterSpacing: '0.01em' }}
-                onClick={() => setCurrentPage(page)}
-              >
-                {page}
-              </button>
-            ))}
-            {totalPages > 3 && <span className="text-secondary px-1">...</span>}
+            {getPageNumbers().map((page, idx) =>
+              typeof page === 'string' ? (
+                <span key={`ellipsis-${idx}`} className="px-2 text-outline text-xs">...</span>
+              ) : (
+                <button
+                  key={page}
+                  className={`w-8 h-8 rounded-lg text-xs font-medium transition-all ${
+                    currentPage === page
+                      ? 'bg-primary text-on-primary shadow-sm'
+                      : 'text-secondary hover:bg-surface-container-low hover:text-on-surface'
+                  }`}
+                  onClick={() => setCurrentPage(page)}
+                >
+                  {page}
+                </button>
+              )
+            )}
             <button
-              className="px-3 py-1.5 border border-outline-variant/50 rounded-md text-secondary hover:bg-surface-container-low transition-colors"
-              style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', letterSpacing: '0.01em' }}
-              disabled={currentPage === totalPages}
+              className="inline-flex items-center gap-1 px-3 py-2 border border-outline-variant/40 rounded-lg text-secondary hover:bg-surface-container-low hover:text-on-surface transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-xs font-medium"
+              disabled={currentPage === totalPages || totalPages === 0}
               onClick={() => setCurrentPage(currentPage + 1)}
             >
               Next
+              <span className="material-symbols-outlined text-[16px]">chevron_right</span>
             </button>
           </div>
         </div>
