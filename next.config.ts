@@ -1,8 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "standalone",
-  /* config options here */
+  output: "export",
+  /* GitHub Pages basePath - matches repo name */
+  basePath: "/nlacw-cms",
+  /* Static export requires unoptimized images */
+  images: {
+    unoptimized: true,
+  },
   typescript: {
     ignoreBuildErrors: true,
   },
