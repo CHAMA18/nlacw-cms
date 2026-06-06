@@ -188,3 +188,32 @@ Stage Summary:
 - Clients and Documents pages now have full pagination
 - Reports tables now use progress bars for rate visualization
 - Dashboard status breakdown uses progress bars instead of plain table
+
+---
+Task ID: 2
+Agent: Main Agent
+Task: Fix hydration mismatch error and deploy to GitHub + GitHub Pages
+
+Work Log:
+- Verified suppressHydrationWarning already on <body> tag in layout.tsx (fixed in previous session)
+- Configured next.config.ts for static export: output="export", basePath="/nlacw-cms", images.unoptimized=true
+- Removed API route (src/app/api/route.ts) incompatible with static export
+- Added .nojekyll file to public/ directory
+- Created GitHub Actions workflow at .github/workflows/deploy.yml
+- Created private GitHub repo: CHAMA18/nlacw-cms
+- Pushed code to main branch
+- Discovered GitHub Actions blocked by billing issue on account
+- Switched to direct branch-based deployment: pushed static export to gh-pages branch
+- Added .nojekyll to gh-pages branch root to prevent Jekyll processing of _next/ directory
+- Configured GitHub Pages to serve from gh-pages branch (legacy build type)
+- Verified site live at https://chama18.github.io/nlacw-cms/ (HTTP 200)
+- Verified CSS/JS assets loading correctly
+- Verified auth/login page accessible
+- Made repo public (required for GitHub Pages on free plan)
+
+Stage Summary:
+- Hydration error was already fixed in previous session
+- NLACW CMS deployed to GitHub: https://github.com/CHAMA18/nlacw-cms
+- GitHub Pages live at: https://chama18.github.io/nlacw-cms/
+- GitHub Actions unavailable due to billing lock - used direct gh-pages branch deployment instead
+- Static export working with basePath /nlacw-cms for GitHub Pages
